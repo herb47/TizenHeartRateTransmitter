@@ -7,6 +7,8 @@
 #include <efl_extension.h>
 #include <dlog.h>
 
+#include <bluetooth.h>
+
 #ifdef  LOG_TAG
 #undef  LOG_TAG
 #endif
