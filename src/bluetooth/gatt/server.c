@@ -4,7 +4,7 @@
 
 static bt_gatt_server_h server = 0;
 
-bool create_gatt_server()
+bool create_server()
 {
 	int retval;
 
@@ -37,17 +37,13 @@ bool register_service_to_server()
 	if(retval != BT_ERROR_NONE)
 	{
 		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_gatt_server_register_service() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register a specified service to the specified GATT server that the local device is hosting.", __FILE__, __func__, __LINE__);
 		return false;
 	}
 	else
-	{
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering a specified service to the specified GATT server that the local device is hosting.", __FILE__, __func__, __LINE__);
 		return true;
-	}
 }
 
-bool destroy_gatt_server()
+bool destroy_server()
 {
 	int retval;
 

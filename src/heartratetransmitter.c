@@ -1,6 +1,7 @@
 #include "heartratetransmitter.h"
 #include "bluetooth/gatt/server.h"
 #include "bluetooth/gatt/service.h"
+#include "bluetooth/gatt/characteristic.h"
 
 typedef struct appdata {
 	Evas_Object *win;
@@ -96,7 +97,7 @@ app_create(void *data)
 	else
 		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in initializing the GATT server.", __FILE__, __func__, __LINE__);
 
-	if (!create_gatt_server())
+	if (!create_server())
 	{
 		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT server's handle.", __FILE__, __func__, __LINE__);
 		return false;
@@ -104,7 +105,7 @@ app_create(void *data)
 	else
 		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT server's handle.", __FILE__, __func__, __LINE__);
 
-	if (!create_gatt_service())
+	if (!create_service())
 	{
 		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT service.", __FILE__, __func__, __LINE__);
 		return false;
@@ -112,8 +113,29 @@ app_create(void *data)
 	else
 		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT service.", __FILE__, __func__, __LINE__);
 
-	if (!register_service_to_server())
+	if (!create_characteristic())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to creates the GATT characteristic.", __FILE__, __func__, __LINE__);
 		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT characteristic.", __FILE__, __func__, __LINE__);
+
+	if (!add_characteristic_to_service())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a characteristic to a specified service.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in adding a characteristic to a specified service.", __FILE__, __func__, __LINE__);
+
+	if (!register_service_to_server())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register a specified service to the specified GATT server that the local device is hosting.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering a specified service to the specified GATT server that the local device is hosting.", __FILE__, __func__, __LINE__);
 
 	retval = bt_gatt_server_start();
 
@@ -153,12 +175,17 @@ app_terminate(void *data)
 	/* Release all resources. */
 	int retval;
 
-	if(!destroy_gatt_service())
+	if(!destroy_characteristic())
+				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT handle of characteristic.", __FILE__, __func__, __LINE__);
+			else
+				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying the GATT handle of characteristic.", __FILE__, __func__, __LINE__);
+
+	if(!destroy_service())
 			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT handle of service.", __FILE__, __func__, __LINE__);
 		else
 			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying the GATT handle of service.", __FILE__, __func__, __LINE__);
 
-	if(!destroy_gatt_server())
+	if(!destroy_server())
 		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT server's handle.", __FILE__, __func__, __LINE__);
 	else
 		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying the GATT server's handle.", __FILE__, __func__, __LINE__);
