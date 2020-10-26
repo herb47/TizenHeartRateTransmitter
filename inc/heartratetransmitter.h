@@ -8,6 +8,7 @@
 #include <dlog.h>
 
 #include <bluetooth.h>
+#include <privacy_privilege_manager.h>
 
 #ifdef  LOG_TAG
 #undef  LOG_TAG

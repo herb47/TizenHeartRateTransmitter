@@ -3,6 +3,7 @@
 #include "bluetooth/gatt/service.h"
 #include "bluetooth/gatt/characteristic.h"
 #include "bluetooth/gatt/descriptor.h"
+#include "sensor/privilege.h"
 
 typedef struct appdata {
 	Evas_Object *win;
@@ -184,6 +185,10 @@ static void
 app_resume(void *data)
 {
 	/* Take necessary actions when application becomes visible. */
+	if (!check_and_request_permission())
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to check if an application, which calls this function, has permission to use the given privilege.", __FILE__, __func__, __LINE__);
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in checking if an application, which calls this function, has permission to use the given privilege.", __FILE__, __func__, __LINE__);
 }
 
 static void

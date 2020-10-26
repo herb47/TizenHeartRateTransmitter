@@ -4,13 +4,13 @@
 <SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"></SignatureMethod>
 <Reference URI="author-signature.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></DigestMethod>
-<DigestValue>uqnZlbaPyMQ+IJyqXE+A75ZEjM4kA8NckpoJZ/UuTN9q5VcjhU66Z6O2bE6gHE9BUH8hsaTkZyH0
-kR6uTDGDTw==</DigestValue>
+<DigestValue>/cnihf7CeseIikkfCF3I+vU3Am1zGppupT9fSXCVnlKBNtcgl+MM6j8eJ13NMopKslkNIM5CrbCg
+jKSbNhJV6A==</DigestValue>
 </Reference>
 <Reference URI="bin%2Fheartratetransmitter">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></DigestMethod>
-<DigestValue>59r7NpEGSnCI+wNe/Wv+LIFx+kDAB7bbkB+6Jk2hCDQ5s1iOc40jA7tKWIa+6+SJgp6x3VmgZ4te
-yQJPuz+b0g==</DigestValue>
+<DigestValue>7SHP7zMOs2fXK5RbKenvPbg/T+xJUEboxDKTQjAeTfdOcyITl4eMntsGLroYjUaEGt25+0o5SewQ
+I1wjfuFW0Q==</DigestValue>
 </Reference>
 <Reference URI="shared%2Fres%2Fheartratetransmitter.png">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></DigestMethod>
@@ -19,8 +19,8 @@ bNc/wgCuGg==</DigestValue>
 </Reference>
 <Reference URI="tizen-manifest.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></DigestMethod>
-<DigestValue>LfZz0EQ+8yfLD/Q7936eCoggI2CL7QyXX50csN9QJD4FgsGGjGjxvP4AQSPFrJv5ba4ddVxuvuxi
-h80fyiUWaQ==</DigestValue>
+<DigestValue>k9u9F0Hmbh0wdJJBqTZqrI11EJVhQZl6sqG9HX3WmWrS9it+jdKE16D+Re9zzGM+W86ED7VBFyYE
+S+jm61Xv+Q==</DigestValue>
 </Reference>
 <Reference URI="#prop">
 <Transforms>
@@ -32,11 +32,11 @@ GyvKX9Snig==</DigestValue>
 </Reference>
 </SignedInfo>
 <SignatureValue>
-HZXjqK05LMX11R4CQwl7c+QNctJk9aK8qefSD5Ehf3hcQn4L02C7HTYG4SFdTCKd+aEgkGG7l4EJ
-SGpSArDPRzg+Y+Atalwiu64EpKuH/QBYUjwlVSvwoNomafjIZYPFb/kiea/Z/iFzyHIFksvI/0Mi
-ytZKXTxBKiAAsO1Jl3SMkk3ROUcoX3kHNi66Uv6RDGzDZeM4cTjXx6nI0Cc3bU625vWUueEP2w7D
-g21GAP+7UE/tXj28acbmlo3cMWm3ckzOeJ5Z32/+jyJY2PoTGsnOKLv9fSsT40SGeasvqPCYKO+V
-XlXjlb9gRQ7f3rOQ5N+M7a1zcfyk03xBFIJ+sw==
+SG/gZl4bVQV6lcqBNYziZ5vkNv1s7HkHtz6kwV1//AHak6yNlqUYhCQu1P2m4yTnqMPAKxHu1mu+
+ahLHN3h/Y3wAM1dIW4IFEZnqPndBOzHrhwuGggSeDqSDXZzhYnYC+IpgKtZJgH7eRL7a9zVITLSp
+IkpQ2ZWiigK5GnJyBxsnhJ8HjM/fZZ/46XSuKFUsFUngKsX+UHZvHOpzfcI9teABd/dsAtZT5rAG
+6kF/ngaMJl0hg6g7szHzoft3MhafuJbXszsnCnzrL7OL6VbEx6Y0wdcklKEo2wlWjqRXmuXLDBJ4
+su3/w6LQkjoJFBqesdzfnuonY8wgbjIFl27cjg==
 </SignatureValue>
 <KeyInfo>
 <X509Data>
