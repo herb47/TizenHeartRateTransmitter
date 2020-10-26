@@ -4,8 +4,8 @@
 <SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"></SignatureMethod>
 <Reference URI="bin%2Fheartratetransmitter">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></DigestMethod>
-<DigestValue>0u5g5RKWGSlMeDC+5y6D7zmqxmY1T+fgq4RNMj2oaw48xAULdgllswFR0EvMChMXYlrtUWCtYJ9P
-i6NDz43wTA==</DigestValue>
+<DigestValue>59r7NpEGSnCI+wNe/Wv+LIFx+kDAB7bbkB+6Jk2hCDQ5s1iOc40jA7tKWIa+6+SJgp6x3VmgZ4te
+yQJPuz+b0g==</DigestValue>
 </Reference>
 <Reference URI="shared%2Fres%2Fheartratetransmitter.png">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></DigestMethod>
@@ -27,11 +27,11 @@ QY10fG1EWQ==</DigestValue>
 </Reference>
 </SignedInfo>
 <SignatureValue>
-NPcaCKPSSbYIxLl6OmpR3+/ZPY03spfJsxmBpj7+Cku97xfePaS5pnY0wJ7CJjs99wAU4+SZiFVk
-PP+1eEuvXA+BAkXFYyXBRv054qOO3FCIWlP1ZUFncGGtE4alrG75WeTtNmqUfZ47srbK3mmhgGxD
-9OfxigPiazj6BLuLIZzQN7IeGeyqgg25CmL+9gEh4jr84DlmO81qDV6cYqE8iL3Hkvk+d7kn/vHM
-MicQrwPMhILSbzGzI8RAvY6LrOiWFisJWwknR8JVMOEIsawfXmGePXG+8dCowNQUb/yo9bJQTaHV
-HwpvoSgTu5c6oBYbzzLr66DpHAFk+Lwl2ZQhSA==
+MJev9A/SzJyzyKNgkCXU+rno8iQGQNIUC5Ijro5J+xMGj8t9wrwi4GDBg1kOrfTvW8HhDc09E1Fo
+TueOm9Dqd9+UWRDsoNa+JApxfnEPwCURUPOjLe8sMzXjVutVEj/wIf0Kxi5/i469NUwDO//g6Of5
+qZ0l7hn9KXVWbrdWk8y9OeINYKw4RQK5qnuQcROJbqOJVnVtNeBSOklo9u0Muc7Xxuwb3HxFc2wi
+eWtpaDMtvr9O0zTIo8adPJeGXTpq9V5dHtA/eEvZPFuZJ9BOOvEarOqpibnKIzzDuq8yF+TVgc/6
+P5ne6zKQbNKFYxIHh1jxmqQ5qUz75/Z/O4umTw==
 </SignatureValue>
 <KeyInfo>
 <X509Data>

@@ -2,6 +2,7 @@
 #define BLUETOOTH_GATT_CHARACTERISTIC_H_
 
 bool create_characteristic();
+bool add_descriptor_to_characteristic();
 bool destroy_characteristic();
 bool get_characteristic_handle(bt_gatt_h *handle);
 
