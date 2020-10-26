@@ -6,8 +6,9 @@ static const char *privilege = "http://tizen.org/privilege/healthinfo";
 
 bool check_and_request_permission() {
 	ppm_check_result_e result;
+	int retval;
 
-	int retval = ppm_check_permission(privilege, &result);
+	retval = ppm_check_permission(privilege, &result);
 
 	if (retval == PRIVACY_PRIVILEGE_MANAGER_ERROR_NONE) {
 		switch (result) {
@@ -33,6 +34,9 @@ bool check_and_request_permission() {
 				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in requesting a user's response to obtain permission for using the given privilege.", __FILE__, __func__, __LINE__);
 				return true;
 			}
+		default:
+			dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function ppm_check_permission() output result = %d", __FILE__, __func__, __LINE__, result);
+			return false;
 		}
 	}
 	else
