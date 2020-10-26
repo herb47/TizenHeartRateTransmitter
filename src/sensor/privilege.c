@@ -4,6 +4,8 @@
 
 static const char *privilege = "http://tizen.org/privilege/healthinfo";
 
+static void request_response_callback(ppm_call_cause_e cause, ppm_request_result_e result, const char *privilege, void *user_data);
+
 bool check_and_request_permission() {
 	ppm_check_result_e result;
 	int retval;
@@ -83,10 +85,41 @@ void request_response_callback(ppm_call_cause_e cause, ppm_request_result_e resu
 				return;
 			}
 			else
-			{
 				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in getting the handle for the default sensor.", __FILE__, __func__, __LINE__);
+
+			if(!create_listener())
+			{
+				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create a sensor listener.", __FILE__, __func__, __LINE__);
 				return;
 			}
+			else
+				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating a sensor listener.", __FILE__, __func__, __LINE__);
+
+			if(!set_listener_attribute())
+			{
+				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to set an attribute to control the behavior of a sensor listener.", __FILE__, __func__, __LINE__);
+				return;
+			}
+			else
+				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in setting an attribute to control the behavior of a sensor listener.", __FILE__, __func__, __LINE__);
+
+			if(!set_listener_event_callback())
+			{
+				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register the callback function to be invoked when sensor events are delivered via a sensor listener.", __FILE__, __func__, __LINE__);
+				return;
+			}
+			else
+				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering the callback function to be invoked when sensor events are delivered via a sensor listener.", __FILE__, __func__, __LINE__);
+
+			if(!start_listener())
+			{
+				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to starts observing the sensor events regarding a given sensor listener.", __FILE__, __func__, __LINE__);
+				return;
+			}
+			else
+				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting observing the sensor events regarding a given sensor listener.", __FILE__, __func__, __LINE__);
+
+			return;
 		case PRIVACY_PRIVILEGE_MANAGER_REQUEST_RESULT_DENY_FOREVER:
 			/* Show a message and terminate the application */
 			dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function privilege_request_response_cb() output result = PRIVACY_PRIVILEGE_MANAGER_REQUEST_RESULT_DENY_FOREVER", __FILE__, __func__, __LINE__);

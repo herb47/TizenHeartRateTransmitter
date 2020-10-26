@@ -198,6 +198,11 @@ app_terminate(void *data)
 	/* Release all resources. */
 	int retval;
 
+	if(!destroy_listener())
+			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
+		else
+			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
+
 	if(!destroy_descriptor())
 		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT handle of descriptor.", __FILE__, __func__, __LINE__);
 	else
