@@ -4,13 +4,13 @@
 <SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha512"></SignatureMethod>
 <Reference URI="author-signature.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></DigestMethod>
-<DigestValue>/8FgSpaCdwz7MUzZMAm2d2OE4ohZcitgqVhVkBjmBOdZUpH0Y6qe4KJP7sBziPcyMf8UXSjnpWwM
-qoW/0ol1eg==</DigestValue>
+<DigestValue>PCE3yA0KMiYVOfIDVe0uckFrxVC4MgexJGsAR5w3tMMSv5fLumaZgJttcUjH9LUg8TBw20OPlwHL
+PJ13lYglRg==</DigestValue>
 </Reference>
 <Reference URI="bin%2Fheartratetransmitter">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></DigestMethod>
-<DigestValue>KOgOkkIxHhYKrY6zePAlrgDMkEt4PXZ1YXRoSPDv7/LSve+PaZ6EoAP57I0OjeVpSQaMt2XOkMSo
-k3KK/bF5nA==</DigestValue>
+<DigestValue>BZm0yp7JvKS9sFJLDq2Qi1fKKUoCuHJJV85ovUSwzvJRplgE0ppj+6bqI/9z3zvGhzy9YOOtc7Z2
+hQPLAvv2MQ==</DigestValue>
 </Reference>
 <Reference URI="shared%2Fres%2Fheartratetransmitter.png">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"></DigestMethod>
@@ -32,11 +32,11 @@ GyvKX9Snig==</DigestValue>
 </Reference>
 </SignedInfo>
 <SignatureValue>
-J6W5ycLCLXDFxnPJko6n0JEqxikjZqcQ+f+SwS6rQ+Na578FsBN4ldDMNzR9IVkGHQ6WPhIiGss4
-A9XZQ9BUDLVxtQ7W9wyxNJzhYYbh6m+yfUsr+dv8INZr699KkpLGHPpppjMETMVB73ro0T2+FUaq
-Uw3C0jzLP/lpw0pjBSLbX3rriA10UmMViu5zcBM+YaAIVo4FiVnKVhbDy9ncXJiHTsGSZ8ic1GsZ
-2579LqKzogOlejJir4dyp5CMK1XfxXKDEMDEqKgb0IWiDpJ909y75KVoM9vik16q24/X3cI1z4yj
-+eL09SRBh51GuSU0SgOlcXy0xVQAeCkipiaQWw==
+S2+yjS3aaz6zG+vOBYh5MToI7U0V9RzMTtvrZJSR+G3USaZd25KqjdDaF/emual3b4CjaIuGi24e
+sU+QO+iWL409r2y2+TZW7ONaIQ06XZ0MhiYgfKjYdsUVfhORs0p9ff3ol0J7OOPai39vGlA12gxY
+kBb6eeNVCxDJd2lfrv8JGpFWnajWXYAlIEfVBV+s1piw2bekwI34GrURVpKQNtjM6Nz1WQOk/guL
+m84x22HfE0OByQNrIB/VwmPnK6/K94fauUoP1UWMcXUBX22PoC7hmd50szNVtwuXFvapeUTxAAKB
+NGFV11AVp6CEUSYFfuSDicxj++msYFs518AabA==
 </SignatureValue>
 <KeyInfo>
 <X509Data>

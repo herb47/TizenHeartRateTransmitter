@@ -1,5 +1,6 @@
 #include "heartratetransmitter.h"
 #include "sensor/listener.h"
+#include "bluetooth/gatt/characteristic.h"
 
 static sensor_type_e type = SENSOR_HRM;
 static sensor_h sensor = 0;
@@ -100,8 +101,19 @@ bool set_listener_event_callback()
 void event_callback(sensor_h sensor, sensor_event_s events[], void *user_data) {
 	//unsigned long long timestamp = events[0].timestamp;
 	int value = (int)events[0].values[0];
+
 	//dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Function sensor_events_callback() output timestamp = %ld", __FILE__, __func__, __LINE__, timestamp);
 	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Function sensor_events_callback() output value = %d", __FILE__, __func__, __LINE__, value);
+
+	if(!set_characteristic_value(value))
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to update the value of a characteristic's GATT handle.", __FILE__, __func__, __LINE__);
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in updating the value of a characteristic's GATT handle.", __FILE__, __func__, __LINE__);
+
+	if(!notify_characteristic_value_changed())
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to notify value change of the characteristic to the remote devices which enable a Client Characteristic Configuration Descriptor.", __FILE__, __func__, __LINE__);
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in notifying value change of the characteristic to the remote devices which enable a Client Characteristic Configuration Descriptor.", __FILE__, __func__, __LINE__);
 }
 
 bool start_listener()
