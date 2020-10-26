@@ -4,6 +4,7 @@
 #include "bluetooth/gatt/characteristic.h"
 #include "bluetooth/gatt/descriptor.h"
 #include "sensor/privilege.h"
+#include "sensor/listener.h"
 
 typedef struct appdata {
 	Evas_Object *win;
