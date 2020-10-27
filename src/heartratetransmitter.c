@@ -3,6 +3,7 @@
 #include "bluetooth/gatt/service.h"
 #include "bluetooth/gatt/characteristic.h"
 #include "bluetooth/gatt/descriptor.h"
+#include "bluetooth/advertiser.h"
 #include "sensor/privilege.h"
 #include "sensor/listener.h"
 
@@ -167,6 +168,31 @@ app_create(void *data)
 	else
 		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering the application along with the GATT services of the application it is hosting.", __FILE__, __func__, __LINE__);
 
+	if(!create_advertiser())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create advertiser to advertise device's existence or respond to LE scanning request.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else {
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating advertiser to advertise device's existence or respond to LE scanning request.", __FILE__, __func__, __LINE__);
+	}
+
+	if(!set_advertising_appearance())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to set the external appearance of this device to advertise or scan response data.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in setting the external appearance of this device to advertise or scan response data.", __FILE__, __func__, __LINE__);
+
+	if(!start_advertising())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
+
 	return true;
 }
 
@@ -198,10 +224,15 @@ app_terminate(void *data)
 	/* Release all resources. */
 	int retval;
 
+	if(!destroy_advertiser())
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy advertiser.", __FILE__, __func__, __LINE__);
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying advertiser.", __FILE__, __func__, __LINE__);
+
 	if(!destroy_listener())
-			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
-		else
-			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
 
 	if(!destroy_descriptor())
 		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT handle of descriptor.", __FILE__, __func__, __LINE__);

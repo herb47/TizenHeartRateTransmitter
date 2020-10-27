@@ -85,7 +85,7 @@ bool set_listener_attribute()
 bool set_listener_event_callback()
 {
 	/* Register callback */
-	unsigned int interval_ms = 10000;
+	unsigned int interval_ms = 1000;
 	int retval;
 
 	retval = sensor_listener_set_event_cb(listener, interval_ms, event_callback, NULL);
