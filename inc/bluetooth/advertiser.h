@@ -2,7 +2,9 @@
 #define BLUETOOTH_ADVERTISER_H_
 
 bool create_advertiser();
+bool set_advertising_device_name();
 bool set_advertising_appearance();
+bool set_advertising_service_uuid();
 bool start_advertising();
 bool destroy_advertiser();
 
