@@ -87,6 +87,21 @@ void advertising_state_changed_callback(int result, bt_advertiser_h advertiser, 
 	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Function advertising_state_changed_callback() is invoked.", __FILE__, __func__, __LINE__);
 }
 
+bool clear_advertising_data()
+{
+	int retval;
+
+	retval = bt_adapter_le_clear_advertising_data(advertiser, BT_ADAPTER_LE_PACKET_ADVERTISING);
+
+	if(retval != BT_ERROR_NONE)
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_adapter_le_clear_advertising_data() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+		return false;
+	}
+	else
+		return true;
+}
+
 bool destroy_advertiser()
 {
 	int retval;

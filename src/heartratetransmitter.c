@@ -11,7 +11,12 @@ typedef struct appdata {
 	Evas_Object *win;
 	Evas_Object *conform;
 	Evas_Object *label;
+	Evas_Object *button;
 } appdata_s;
+
+/* Callback for the "clicked" signal */
+/* Called when the button is clicked by the user */
+static void button_clicked_callback(void *data, Evas_Object *obj, void *event_info);
 
 static void
 win_delete_request_cb(void *data, Evas_Object *obj, void *event_info)
@@ -58,10 +63,16 @@ create_base_gui(appdata_s *ad)
 	/* Label */
 	/* Create an actual view of the base gui.
 	   Modify this part to change the view. */
-	ad->label = elm_label_add(ad->conform);
-	elm_object_text_set(ad->label, "<align=center>Hello Tizen</align>");
-	evas_object_size_hint_weight_set(ad->label, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-	elm_object_content_set(ad->conform, ad->label);
+	//ad->label = elm_label_add(ad->conform);
+	//elm_object_text_set(ad->label, "<align=center>Hello Tizen</align>");
+	//evas_object_size_hint_weight_set(ad->label, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	//elm_object_content_set(ad->conform, ad->label);
+
+	/* Button */
+	ad->button = elm_button_add(ad->conform);
+	elm_object_text_set(ad->button, "Shut down the transmitter");
+	elm_object_content_set(ad->conform, ad->button);
+	evas_object_smart_callback_add(ad->button, "clicked", button_clicked_callback, NULL);
 
 	/* Show window after base gui is set up */
 	evas_object_show(ad->win);
@@ -240,6 +251,11 @@ app_terminate(void *data)
 	/* Release all resources. */
 	int retval;
 
+	if(!clear_advertising_data())
+			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to clear all data to be advertised.", __FILE__, __func__, __LINE__);
+		else
+			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in clearing all data to be advertised.", __FILE__, __func__, __LINE__);
+
 	if(!destroy_advertiser())
 		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy advertiser.", __FILE__, __func__, __LINE__);
 	else
@@ -354,4 +370,12 @@ main(int argc, char *argv[])
 	}
 
 	return ret;
+}
+
+/* Callback for the "clicked" signal */
+/* Called when the button is clicked by the user */
+static void button_clicked_callback(void *data, Evas_Object *obj, void *event_info)
+{
+	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Shut down button is clicked.", __FILE__, __func__, __LINE__);
+	ui_app_exit();
 }
