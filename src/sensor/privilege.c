@@ -17,6 +17,51 @@ bool check_and_request_permission() {
 		case PRIVACY_PRIVILEGE_MANAGER_CHECK_RESULT_ALLOW:
 			/* Update UI and start accessing protected functionality */
 			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: The application has permission to use a privilege.", __FILE__, __func__, __LINE__);
+
+			if(is_listener_created())
+			{
+				if(!initialize_sensor())
+				{
+					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to get the handle for the default sensor.", __FILE__, __func__, __LINE__);
+					return false;
+				}
+				else
+					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in getting the handle for the default sensor.", __FILE__, __func__, __LINE__);
+
+				if(!create_listener())
+				{
+					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create a sensor listener.", __FILE__, __func__, __LINE__);
+					return false;
+				}
+				else
+					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating a sensor listener.", __FILE__, __func__, __LINE__);
+
+				if(!set_listener_attribute())
+				{
+					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to set an attribute to control the behavior of a sensor listener.", __FILE__, __func__, __LINE__);
+					return false;
+				}
+				else
+					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in setting an attribute to control the behavior of a sensor listener.", __FILE__, __func__, __LINE__);
+
+				if(!set_listener_event_callback())
+				{
+					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register the callback function to be invoked when sensor events are delivered via a sensor listener.", __FILE__, __func__, __LINE__);
+					return false;
+				}
+				else
+					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering the callback function to be invoked when sensor events are delivered via a sensor listener.", __FILE__, __func__, __LINE__);
+
+				if(!start_listener())
+				{
+					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to starts observing the sensor events regarding a given sensor listener.", __FILE__, __func__, __LINE__);
+					return false;
+				}
+				else
+					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting observing the sensor events regarding a given sensor listener.", __FILE__, __func__, __LINE__);
+
+			}
+
 			return true;
 		case PRIVACY_PRIVILEGE_MANAGER_CHECK_RESULT_DENY:
 			/* Show a message and terminate the application */

@@ -33,11 +33,12 @@ bool initialize_sensor()
 
 	retval = sensor_get_default_sensor(type, &sensor);
 
-	if(retval != SENSOR_ERROR_NONE) {
+	if(retval != SENSOR_ERROR_NONE)
+	{
 		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function sensor_get_default_sensor() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-
 		return false;
-	} else
+	}
+	else
 		return true;
 }
 
@@ -142,6 +143,14 @@ bool destroy_listener()
 		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function sensor_destroy_listener() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
 		return false;
 	}
+	else
+		return true;
+}
+
+bool is_listener_created()
+{
+	if (listener != 0)
+		return false;
 	else
 		return true;
 }
