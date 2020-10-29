@@ -188,14 +188,6 @@ app_create(void *data)
 		else
 			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in setting whether the device name should be included in advertise data.", __FILE__, __func__, __LINE__);
 
-	if(!set_advertising_appearance())
-	{
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to set the external appearance of this device to advertise or scan response data.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in setting the external appearance of this device to advertise or scan response data.", __FILE__, __func__, __LINE__);
-
 	if(!set_advertising_service_uuid())
 		{
 			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a service UUID to advertise data.", __FILE__, __func__, __LINE__);
