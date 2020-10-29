@@ -3,7 +3,7 @@
 #include "bluetooth/gatt/service.h"
 #include "bluetooth/gatt/characteristic.h"
 #include "bluetooth/gatt/descriptor.h"
-#include "bluetooth/advertiser.h"
+#include "bluetooth/le/advertiser.h"
 #include "sensor/privilege.h"
 #include "sensor/listener.h"
 
@@ -16,7 +16,7 @@ typedef struct appdata {
 
 /* Callback for the "clicked" signal */
 /* Called when the button is clicked by the user */
-static void button_clicked_callback(void *data, Evas_Object *obj, void *event_info);
+void button_clicked_callback(void *data, Evas_Object *obj, void *event_info);
 
 static void
 win_delete_request_cb(void *data, Evas_Object *obj, void *event_info)
@@ -111,6 +111,14 @@ app_create(void *data)
 	}
 	else
 		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT server's handle.", __FILE__, __func__, __LINE__);
+
+	if (!set_connection_state_changed_callback())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register a callback function that will be invoked when the connection state is changed.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering a callback function that will be invoked when the connection state is changed.", __FILE__, __func__, __LINE__);
 
 	if (!create_service())
 	{
@@ -235,51 +243,6 @@ app_terminate(void *data)
 	/* Release all resources. */
 	int retval;
 
-	if(!clear_advertising_data())
-			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to clear all data to be advertised.", __FILE__, __func__, __LINE__);
-		else
-			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in clearing all data to be advertised.", __FILE__, __func__, __LINE__);
-
-	if(!destroy_advertiser())
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy advertiser.", __FILE__, __func__, __LINE__);
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying advertiser.", __FILE__, __func__, __LINE__);
-
-	if(!destroy_listener())
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
-
-	if(!destroy_descriptor())
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT handle of descriptor.", __FILE__, __func__, __LINE__);
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying the GATT handle of descriptor.", __FILE__, __func__, __LINE__);
-
-	if(!destroy_characteristic())
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT handle of characteristic.", __FILE__, __func__, __LINE__);
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying the GATT handle of characteristic.", __FILE__, __func__, __LINE__);
-
-	if(!destroy_service())
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT handle of service.", __FILE__, __func__, __LINE__);
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying the GATT handle of service.", __FILE__, __func__, __LINE__);
-
-	if(!destroy_server())
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT server's handle.", __FILE__, __func__, __LINE__);
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying the GATT server's handle.", __FILE__, __func__, __LINE__);
-
-	retval = bt_gatt_server_deinitialize();
-
-	if(retval != BT_ERROR_NONE)
-	{
-		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_gatt_server_deinitialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to deinitializ the GATT server.", __FILE__, __func__, __LINE__);
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in deinitializing the GATT server.", __FILE__, __func__, __LINE__);
-
 	retval = bt_deinitialize();
 
 	if(retval != BT_ERROR_NONE)
@@ -289,6 +252,11 @@ app_terminate(void *data)
 	}
 	else
 		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all resources of the Bluetooth API.", __FILE__, __func__, __LINE__);
+
+	if(!destroy_listener())
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
 }
 
 static void
@@ -358,7 +326,7 @@ main(int argc, char *argv[])
 
 /* Callback for the "clicked" signal */
 /* Called when the button is clicked by the user */
-static void button_clicked_callback(void *data, Evas_Object *obj, void *event_info)
+void button_clicked_callback(void *data, Evas_Object *obj, void *event_info)
 {
 	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Shut down button is clicked.", __FILE__, __func__, __LINE__);
 	ui_app_exit();

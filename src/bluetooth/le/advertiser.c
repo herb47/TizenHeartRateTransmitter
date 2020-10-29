@@ -1,5 +1,5 @@
 #include "heartratetransmitter.h"
-#include "bluetooth/advertiser.h"
+#include "bluetooth/le/advertiser.h"
 
 static bt_advertiser_h advertiser = 0;
 static const char *SERVICE_UUID = "0000180D-0000-1000-8000-00805F9B34FB";

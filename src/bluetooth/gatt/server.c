@@ -4,6 +4,8 @@
 
 static bt_gatt_server_h server = 0;
 
+void connection_state_changed_callback(int result, bool connected, const char *remote_address, void *user_data);
+
 bool create_server()
 {
 	int retval;
@@ -56,4 +58,24 @@ bool destroy_server()
 	}
 	else
 		return true;
+}
+
+bool set_connection_state_changed_callback()
+{
+	int retval;
+
+	retval = bt_gatt_set_connection_state_changed_cb(connection_state_changed_callback, NULL);
+
+	if(retval != BT_ERROR_NONE)
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_gatt_set_connection_state_changed_cb() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+		return false;
+	}
+	else
+		return true;
+}
+
+void connection_state_changed_callback(int result, bool connected, const char *remote_address, void *user_data)
+{
+	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Function connection_state_changed_callback() is invoked.", __FILE__, __func__, __LINE__);
 }
