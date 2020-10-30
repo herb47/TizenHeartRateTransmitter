@@ -1,22 +1,31 @@
 #include "heartratetransmitter.h"
+#include <privacy_privilege_manager.h>
+
 #include "bluetooth/gatt/server.h"
 #include "bluetooth/gatt/service.h"
 #include "bluetooth/gatt/characteristic.h"
 #include "bluetooth/gatt/descriptor.h"
 #include "bluetooth/le/advertiser.h"
-#include "sensor/privilege.h"
+
 #include "sensor/listener.h"
+
+const char *sensor_privilege = "http://tizen.org/privilege/healthinfo";
 
 typedef struct appdata {
 	Evas_Object *win;
 	Evas_Object *conform;
-	Evas_Object *label;
 	Evas_Object *button;
 } appdata_s;
 
-/* Callback for the "clicked" signal */
-/* Called when the button is clicked by the user */
-void button_clicked_callback(void *data, Evas_Object *obj, void *event_info);
+sensor_type_e sensor_type = SENSOR_HRM;
+sensor_h sensor_handle = 0;
+
+bool check_hrm_sensor_is_supported();
+bool initialize_hrm_sensor();
+
+bool check_and_request_sensor_permission();
+bool request_sensor_permission();
+void request_sensor_permission_response_callback(ppm_call_cause_e cause, ppm_request_result_e result, const char *privilege, void *user_data);
 
 static void
 win_delete_request_cb(void *data, Evas_Object *obj, void *event_info)
@@ -30,6 +39,14 @@ win_back_cb(void *data, Evas_Object *obj, void *event_info)
 	appdata_s *ad = data;
 	/* Let window go to hide state. */
 	elm_win_lower(ad->win);
+}
+
+/* Callback for the "clicked" signal */
+/* Called when the button is clicked by the user */
+void button_clicked_callback(void *data, Evas_Object *obj, void *event_info)
+{
+	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Shut down button is clicked.", __FILE__, __func__, __LINE__);
+	ui_app_exit();
 }
 
 static void
@@ -60,7 +77,6 @@ create_base_gui(appdata_s *ad)
 	elm_win_resize_object_add(ad->win, ad->conform);
 	evas_object_show(ad->conform);
 
-	/* Button */
 	ad->button = elm_button_add(ad->conform);
 	elm_object_text_set(ad->button, "Shut down the transmitter");
 	elm_object_content_set(ad->conform, ad->button);
@@ -77,140 +93,148 @@ app_create(void *data)
 		Initialize UI resources and application's data
 		If this function returns true, the main loop of application starts
 		If this function returns false, the application is terminated */
-	int retval;
+	//int retval;
 	appdata_s *ad = data;
 
 	create_base_gui(ad);
 
-	retval = bt_initialize();
-
-	if(retval != BT_ERROR_NONE)
+	if(!check_hrm_sensor_is_supported())
 	{
-		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_initialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to initialize the Bluetooth API.", __FILE__, __func__, __LINE__);
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: A HRM sensor is not supported.", __FILE__, __func__, __LINE__);
 		return false;
 	}
 	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in initializing the Bluetooth API.", __FILE__, __func__, __LINE__);
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: A HRM sensor is supported.", __FILE__, __func__, __LINE__);
 
-	retval = bt_gatt_server_initialize();
-
-	if(retval != BT_ERROR_NONE)
-	{
-		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_gatt_server_initialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to initialize the GATT server.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in initializing the GATT server.", __FILE__, __func__, __LINE__);
-
-	if (!create_server())
-	{
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT server's handle.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT server's handle.", __FILE__, __func__, __LINE__);
-
-	if (!set_connection_state_changed_callback())
-	{
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register a callback function that will be invoked when the connection state is changed.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering a callback function that will be invoked when the connection state is changed.", __FILE__, __func__, __LINE__);
-
-	if (!create_service())
-	{
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT service.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT service.", __FILE__, __func__, __LINE__);
-
-	if (!create_characteristic())
-	{
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to creates the GATT characteristic.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT characteristic.", __FILE__, __func__, __LINE__);
-
-	if (!create_descriptor())
-	{
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT characteristic descriptor.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT characteristic descriptor.", __FILE__, __func__, __LINE__);
-
-	if (!add_descriptor_to_characteristic())
-		{
-			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a descriptor to a specified characteristic.", __FILE__, __func__, __LINE__);
-			return false;
-		}
-		else
-			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in adding a descriptor to a specified characteristic.", __FILE__, __func__, __LINE__);
-
-	if (!add_characteristic_to_service())
-	{
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a characteristic to a specified service.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in adding a characteristic to a specified service.", __FILE__, __func__, __LINE__);
-
-	if (!register_service_to_server())
-	{
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register a specified service to the specified GATT server that the local device is hosting.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering a specified service to the specified GATT server that the local device is hosting.", __FILE__, __func__, __LINE__);
-
-	retval = bt_gatt_server_start();
-
-	if(retval != BT_ERROR_NONE)
-	{
-		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_gatt_server_start() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register the application along with the GATT services of the application it is hosting.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering the application along with the GATT services of the application it is hosting.", __FILE__, __func__, __LINE__);
-
-	if(!create_advertiser())
-	{
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create advertiser to advertise device's existence or respond to LE scanning request.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else {
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating advertiser to advertise device's existence or respond to LE scanning request.", __FILE__, __func__, __LINE__);
-	}
-
-	if(!set_advertising_device_name())
-		{
-			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to set whether the device name should be included in advertise data.", __FILE__, __func__, __LINE__);
-			return false;
-		}
-		else
-			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in setting whether the device name should be included in advertise data.", __FILE__, __func__, __LINE__);
-
-	if(!set_advertising_service_uuid())
-		{
-			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a service UUID to advertise data.", __FILE__, __func__, __LINE__);
-			return false;
-		}
-		else
-			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in adding a service UUID to advertise data.", __FILE__, __func__, __LINE__);
-
-	if(!start_advertising())
-	{
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
+//	retval = bt_initialize();
+//
+//	if(retval != BT_ERROR_NONE)
+//	{
+//		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_initialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to initialize the Bluetooth API.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in initializing the Bluetooth API.", __FILE__, __func__, __LINE__);
+//
+//	retval = bt_gatt_server_initialize();
+//
+//	if(retval != BT_ERROR_NONE)
+//	{
+//		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_gatt_server_initialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to initialize the GATT server.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in initializing the GATT server.", __FILE__, __func__, __LINE__);
+//
+//	if (!create_server())
+//	{
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT server's handle.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT server's handle.", __FILE__, __func__, __LINE__);
+//
+//	if (!set_connection_state_changed_callback())
+//	{
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register a callback function that will be invoked when the connection state is changed.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering a callback function that will be invoked when the connection state is changed.", __FILE__, __func__, __LINE__);
+//
+//	if (!create_service())
+//	{
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT service.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT service.", __FILE__, __func__, __LINE__);
+//
+//	if (!create_characteristic())
+//	{
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to creates the GATT characteristic.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT characteristic.", __FILE__, __func__, __LINE__);
+//
+//	if (!create_descriptor())
+//	{
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT characteristic descriptor.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT characteristic descriptor.", __FILE__, __func__, __LINE__);
+//
+//	if (!add_descriptor_to_characteristic())
+//		{
+//			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a descriptor to a specified characteristic.", __FILE__, __func__, __LINE__);
+//			return false;
+//		}
+//		else
+//			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in adding a descriptor to a specified characteristic.", __FILE__, __func__, __LINE__);
+//
+//	if (!add_characteristic_to_service())
+//	{
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a characteristic to a specified service.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in adding a characteristic to a specified service.", __FILE__, __func__, __LINE__);
+//
+//	if (!register_service_to_server())
+//	{
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register a specified service to the specified GATT server that the local device is hosting.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering a specified service to the specified GATT server that the local device is hosting.", __FILE__, __func__, __LINE__);
+//
+//	retval = bt_gatt_server_start();
+//
+//	if(retval != BT_ERROR_NONE)
+//	{
+//		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_gatt_server_start() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register the application along with the GATT services of the application it is hosting.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering the application along with the GATT services of the application it is hosting.", __FILE__, __func__, __LINE__);
+//
+//	if(!create_advertiser())
+//	{
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create advertiser to advertise device's existence or respond to LE scanning request.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else {
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating advertiser to advertise device's existence or respond to LE scanning request.", __FILE__, __func__, __LINE__);
+//	}
+//
+//	if(!set_advertising_device_name())
+//		{
+//			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to set whether the device name should be included in advertise data.", __FILE__, __func__, __LINE__);
+//			return false;
+//		}
+//		else
+//			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in setting whether the device name should be included in advertise data.", __FILE__, __func__, __LINE__);
+//
+//	if(!set_advertising_service_uuid())
+//		{
+//			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a service UUID to advertise data.", __FILE__, __func__, __LINE__);
+//			return false;
+//		}
+//		else
+//			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in adding a service UUID to advertise data.", __FILE__, __func__, __LINE__);
+//
+//	if(!start_advertising())
+//	{
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
+//		return false;
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
 
 	return true;
 }
@@ -231,32 +255,38 @@ static void
 app_resume(void *data)
 {
 	/* Take necessary actions when application becomes visible. */
-	if (!check_and_request_permission())
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to check if an application, which calls this function, has permission to use the given privilege.", __FILE__, __func__, __LINE__);
+	if (!check_and_request_sensor_permission())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to check if an application has permission to use the sensor privilege.", __FILE__, __func__, __LINE__);
+		ui_app_exit();
+	}
 	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in checking if an application, which calls this function, has permission to use the given privilege.", __FILE__, __func__, __LINE__);
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in checking if an application has permission to use the sensor privilege.", __FILE__, __func__, __LINE__);
 }
 
 static void
 app_terminate(void *data)
 {
 	/* Release all resources. */
-	int retval;
+//	int retval;
+//
+//	retval = bt_deinitialize();
+//
+//	if(retval != BT_ERROR_NONE)
+//	{
+//		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_deinitialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all resources of the Bluetooth API.", __FILE__, __func__, __LINE__);
+//	}
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all resources of the Bluetooth API.", __FILE__, __func__, __LINE__);
 
-	retval = bt_deinitialize();
-
-	if(retval != BT_ERROR_NONE)
+	if(check_hrm_sensor_listener_is_created())
 	{
-		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_deinitialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all resources of the Bluetooth API.", __FILE__, __func__, __LINE__);
+		if(!destroy_hrm_sensor_listener())
+			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all the resources allocated for a HRM sensor listener.", __FILE__, __func__, __LINE__);
+		else
+			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all the resources allocated for a HRM sensor listener.", __FILE__, __func__, __LINE__);
 	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all resources of the Bluetooth API.", __FILE__, __func__, __LINE__);
-
-	if(!destroy_listener())
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all the resources allocated for a listener.", __FILE__, __func__, __LINE__);
 }
 
 static void
@@ -324,10 +354,170 @@ main(int argc, char *argv[])
 	return ret;
 }
 
-/* Callback for the "clicked" signal */
-/* Called when the button is clicked by the user */
-void button_clicked_callback(void *data, Evas_Object *obj, void *event_info)
+bool check_hrm_sensor_is_supported()
 {
-	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Shut down button is clicked.", __FILE__, __func__, __LINE__);
-	ui_app_exit();
+	int retval;
+	bool supported = false;
+
+	retval = sensor_is_supported(sensor_type, &supported);
+
+	if(retval != SENSOR_ERROR_NONE)
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function sensor_is_supported() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to checks whether a HRM sensor is supported in the current device.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in checking whether a HRM sensor is supported in the current device.", __FILE__, __func__, __LINE__);
+
+	if(!supported)
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function sensor_is_supported() output supported = %d", __FILE__, __func__, __LINE__, supported);
+		return false;
+	}
+	else
+		return true;
+}
+
+bool initialize_hrm_sensor()
+{
+	int retval;
+
+	retval = sensor_get_default_sensor(sensor_type, &sensor_handle);
+
+	if(retval != SENSOR_ERROR_NONE)
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function sensor_get_default_sensor() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+		return false;
+	}
+	else
+		return true;
+}
+
+bool check_and_request_sensor_permission() {
+	int retval;
+	ppm_check_result_e result;
+
+	retval = ppm_check_permission(sensor_privilege, &result);
+
+	if (retval == PRIVACY_PRIVILEGE_MANAGER_ERROR_NONE)
+	{
+		switch (result)
+		{
+		case PRIVACY_PRIVILEGE_MANAGER_CHECK_RESULT_ALLOW:
+			/* Update UI and start accessing protected functionality */
+			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: The application has permission to use a sensor privilege.", __FILE__, __func__, __LINE__);
+
+			if(!check_hrm_sensor_listener_is_created())
+			{
+				if(!initialize_hrm_sensor())
+				{
+					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to get the handle for the default sensor of a HRM sensor.", __FILE__, __func__, __LINE__);
+					ui_app_exit();
+				}
+				else
+					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in getting the handle for the default sensor of a HRM sensor.", __FILE__, __func__, __LINE__);
+
+				if(!create_hrm_sensor_listener(sensor_handle))
+				{
+					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create a HRM sensor listener.", __FILE__, __func__, __LINE__);
+					return false;
+				}
+				else
+				{
+					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating a HRM sensor listener.", __FILE__, __func__, __LINE__);
+					return true;
+				}
+			}
+		case PRIVACY_PRIVILEGE_MANAGER_CHECK_RESULT_DENY:
+			/* Show a message and terminate the application */
+			dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function ppm_check_permission() output result = PRIVACY_PRIVILEGE_MANAGER_CHECK_RESULT_DENY", __FILE__, __func__, __LINE__);
+			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: The application doesn't have permission to use a sensor privilege.", __FILE__, __func__, __LINE__);
+			return false;
+		case PRIVACY_PRIVILEGE_MANAGER_CHECK_RESULT_ASK:
+			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: The user has to be asked whether to grant permission to use a sensor privilege.", __FILE__, __func__, __LINE__);
+
+			if(!request_sensor_permission())
+			{
+				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to request a user's response to obtain permission for using the sensor privilege.", __FILE__, __func__, __LINE__);
+				return false;
+			}
+			else
+			{
+				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in requesting a user's response to obtain permission for using the sensor privilege.", __FILE__, __func__, __LINE__);
+				return true;
+			}
+		}
+	}
+	else
+	{
+		/* retval != PRIVACY_PRIVILEGE_MANAGER_ERROR_NONE */
+		/* Handle errors */
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function ppm_check_permission() return %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+		return false;
+	}
+}
+
+bool request_sensor_permission()
+{
+	int retval;
+
+	retval = ppm_request_permission(sensor_privilege, request_sensor_permission_response_callback, NULL);
+
+	/* Log and handle errors */
+	if (retval == PRIVACY_PRIVILEGE_MANAGER_ERROR_NONE)
+		return true;
+	else
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function ppm_request_permission() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+		return false;
+	}
+}
+
+void request_sensor_permission_response_callback(ppm_call_cause_e cause, ppm_request_result_e result, const char *privilege, void *user_data) {
+	if (cause == PRIVACY_PRIVILEGE_MANAGER_CALL_CAUSE_ERROR)
+	{
+		/* Log and handle errors */
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function request_sensor_permission_response_callback() output cause = PRIVACY_PRIVILEGE_MANAGER_CALL_CAUSE_ERROR", __FILE__, __func__, __LINE__);
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Function request_sensor_permission_response_callback() was called because of an error.", __FILE__, __func__, __LINE__);
+	}
+	else
+	{
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Function request_sensor_permission_response_callback() was called with a valid answer.", __FILE__, __func__, __LINE__);
+
+		switch (result) {
+		case PRIVACY_PRIVILEGE_MANAGER_REQUEST_RESULT_ALLOW_FOREVER:
+			/* Update UI and start accessing protected functionality */
+			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: The user granted permission to use a sensor privilege for an indefinite period of time.", __FILE__, __func__, __LINE__);
+
+			if(!initialize_hrm_sensor())
+			{
+				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to get the handle for the default sensor of a HRM sensor.", __FILE__, __func__, __LINE__);
+				ui_app_exit();
+			}
+			else
+				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in getting the handle for the default sensor of a HRM sensor.", __FILE__, __func__, __LINE__);
+
+			if(!create_hrm_sensor_listener(sensor_handle))
+			{
+				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create a HRM sensor listener.", __FILE__, __func__, __LINE__);
+				ui_app_exit();
+			}
+			else
+				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating a HRM sensor listener.", __FILE__, __func__, __LINE__);
+			break;
+		case PRIVACY_PRIVILEGE_MANAGER_REQUEST_RESULT_DENY_FOREVER:
+			/* Show a message and terminate the application */
+			dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function request_sensor_permission_response_callback() output result = PRIVACY_PRIVILEGE_MANAGER_REQUEST_RESULT_DENY_FOREVER", __FILE__, __func__, __LINE__);
+			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: The user denied granting permission to use a sensor privilege for an indefinite period of time.", __FILE__, __func__, __LINE__);
+			ui_app_exit();
+			break;
+		case PRIVACY_PRIVILEGE_MANAGER_REQUEST_RESULT_DENY_ONCE:
+			/* Show a message with explanation */
+			dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function request_sensor_permission_response_callback() output result = PRIVACY_PRIVILEGE_MANAGER_REQUEST_RESULT_DENY_ONCE", __FILE__, __func__, __LINE__);
+			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: The user denied granting permission to use a sensor privilege once.", __FILE__, __func__, __LINE__);
+			ui_app_exit();
+			break;
+		}
+	}
 }

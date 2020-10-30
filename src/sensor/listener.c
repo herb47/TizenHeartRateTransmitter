@@ -2,62 +2,43 @@
 #include "sensor/listener.h"
 #include "bluetooth/gatt/characteristic.h"
 
-static sensor_type_e type = SENSOR_HRM;
-static sensor_h sensor = 0;
-static sensor_listener_h listener = 0;
+sensor_listener_h hrm_sensor_listener_handle = 0;
+unsigned int hrm_sensor_listener_event_update_interval_ms = 1000;
 
-static void event_callback(sensor_h sensor, sensor_event_s events[], void *user_data);
+static void hrm_sensor_listener_event_callback(sensor_h sensor, sensor_event_s events[], void *user_data);
 
-bool initialize_sensor()
-{
-	int retval;
-	bool supported = false;
-
-	retval = sensor_is_supported(type, &supported);
-
-	if(retval != SENSOR_ERROR_NONE) {
-		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function sensor_is_supported() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to checks whether a given sensor type is supported in the current device.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in checking whether a given sensor type is supported in the current device.", __FILE__, __func__, __LINE__);
-
-	if(!supported) {
-		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function sensor_is_supported() output supported = %d", __FILE__, __func__, __LINE__, supported);
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Heart rate monitor sensor is not supported.", __FILE__, __func__, __LINE__);
-		return false;
-	}
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Heart rate monitor sensor is supported.", __FILE__, __func__, __LINE__);
-
-	retval = sensor_get_default_sensor(type, &sensor);
-
-	if(retval != SENSOR_ERROR_NONE)
-	{
-		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function sensor_get_default_sensor() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-		return false;
-	}
-	else
-		return true;
-}
-
-bool create_listener()
+bool create_hrm_sensor_listener(sensor_h sensor_handle)
 {
 	int retval;
 
-	retval = sensor_create_listener(sensor, &listener);
+	retval = sensor_create_listener(sensor_handle, &hrm_sensor_listener_handle);
 
 	if(retval != SENSOR_ERROR_NONE)
 	{
 		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function sensor_create_listener() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
 		return false;
 	}
+
+	if(!set_hrm_sensor_listener_attribute())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to set an attribute to control the behavior of a HRM sensor listener.", __FILE__, __func__, __LINE__);
+		return false;
+	}
 	else
-		return true;
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in setting an attribute to control the behavior of a HRM sensor listener.", __FILE__, __func__, __LINE__);
+
+	if(!set_hrm_sensor_listener_event_callback())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register the callback function to be invoked when sensor events are delivered via a HRM sensor listener.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering the callback function to be invoked when sensor events are delivered via a HRM sensor listener.", __FILE__, __func__, __LINE__);
+
+	return true;
 }
 
-bool set_listener_attribute()
+bool set_hrm_sensor_listener_attribute()
 {
 	int retval;
 
@@ -66,7 +47,7 @@ bool set_listener_attribute()
 	* if the display is switched off or the device goes to the power-save mode. You can override such behavior:
 	*/
 
-	retval = sensor_listener_set_attribute_int(listener, SENSOR_ATTRIBUTE_PAUSE_POLICY, SENSOR_PAUSE_NONE);
+	retval = sensor_listener_set_attribute_int(hrm_sensor_listener_handle, SENSOR_ATTRIBUTE_PAUSE_POLICY, SENSOR_PAUSE_NONE);
 
 	/*
 	* The above function makes the listener listen for the sensor data regardless of the display state and the power-save mode.
@@ -83,13 +64,12 @@ bool set_listener_attribute()
 		return true;
 }
 
-bool set_listener_event_callback()
+bool set_hrm_sensor_listener_event_callback()
 {
 	/* Register callback */
-	unsigned int interval_ms = 1000;
 	int retval;
 
-	retval = sensor_listener_set_event_cb(listener, interval_ms, event_callback, NULL);
+	retval = sensor_listener_set_event_cb(hrm_sensor_listener_handle, hrm_sensor_listener_event_update_interval_ms, hrm_sensor_listener_event_callback, NULL);
 
 	if(retval != SENSOR_ERROR_NONE) {
 		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function sensor_listener_set_event_cb() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
@@ -99,29 +79,29 @@ bool set_listener_event_callback()
 		return true;
 }
 
-void event_callback(sensor_h sensor, sensor_event_s events[], void *user_data) {
+void hrm_sensor_listener_event_callback(sensor_h sensor, sensor_event_s events[], void *user_data) {
 	//unsigned long long timestamp = events[0].timestamp;
 	int value = (int)events[0].values[0];
 
 	//dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Function sensor_events_callback() output timestamp = %ld", __FILE__, __func__, __LINE__, timestamp);
 	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Function sensor_events_callback() output value = %d", __FILE__, __func__, __LINE__, value);
 
-	if(!set_characteristic_value(value))
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to update the value of a characteristic's GATT handle.", __FILE__, __func__, __LINE__);
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in updating the value of a characteristic's GATT handle.", __FILE__, __func__, __LINE__);
-
-	if(!notify_characteristic_value_changed())
-		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to notify value change of the characteristic to the remote devices which enable a Client Characteristic Configuration Descriptor.", __FILE__, __func__, __LINE__);
-	else
-		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in notifying value change of the characteristic to the remote devices which enable a Client Characteristic Configuration Descriptor.", __FILE__, __func__, __LINE__);
+//	if(!set_characteristic_value(value))
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to update the value of a characteristic's GATT handle.", __FILE__, __func__, __LINE__);
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in updating the value of a characteristic's GATT handle.", __FILE__, __func__, __LINE__);
+//
+//	if(!notify_characteristic_value_changed())
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to notify value change of the characteristic to the remote devices which enable a Client Characteristic Configuration Descriptor.", __FILE__, __func__, __LINE__);
+//	else
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in notifying value change of the characteristic to the remote devices which enable a Client Characteristic Configuration Descriptor.", __FILE__, __func__, __LINE__);
 }
 
-bool start_listener()
+bool start_hrm_sensor_listener()
 {
 	int retval;
 
-	retval = sensor_listener_start(listener);
+	retval = sensor_listener_start(hrm_sensor_listener_handle);
 
 	if(retval != SENSOR_ERROR_NONE)
 	{
@@ -132,11 +112,11 @@ bool start_listener()
 		return true;
 }
 
-bool destroy_listener()
+bool destroy_hrm_sensor_listener()
 {
 	int retval;
 
-	retval = sensor_destroy_listener(listener);
+	retval = sensor_destroy_listener(hrm_sensor_listener_handle);
 
 	if(retval != SENSOR_ERROR_NONE)
 	{
@@ -144,13 +124,16 @@ bool destroy_listener()
 		return false;
 	}
 	else
+	{
+		hrm_sensor_listener_handle = 0;
 		return true;
+	}
 }
 
-bool is_listener_created()
+bool check_hrm_sensor_listener_is_created()
 {
-	if (listener != 0)
-		return false;
-	else
+	if (hrm_sensor_listener_handle != 0)
 		return true;
+	else
+		return false;
 }
