@@ -93,7 +93,7 @@ app_create(void *data)
 		Initialize UI resources and application's data
 		If this function returns true, the main loop of application starts
 		If this function returns false, the application is terminated */
-	//int retval;
+	int retval;
 	appdata_s *ad = data;
 
 	create_base_gui(ad);
@@ -106,135 +106,91 @@ app_create(void *data)
 	else
 		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: A HRM sensor is supported.", __FILE__, __func__, __LINE__);
 
-//	retval = bt_initialize();
-//
-//	if(retval != BT_ERROR_NONE)
+	retval = bt_initialize();
+
+	if(retval != BT_ERROR_NONE)
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_initialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to initialize the Bluetooth API.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in initializing the Bluetooth API.", __FILE__, __func__, __LINE__);
+
+	retval = bt_gatt_server_initialize();
+
+	if(retval != BT_ERROR_NONE)
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_gatt_server_initialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to initialize the GATT server.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in initializing the GATT server.", __FILE__, __func__, __LINE__);
+
+	if(!create_gatt_descriptor())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT characteristic descriptor.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT characteristic descriptor.", __FILE__, __func__, __LINE__);
+
+	if(!create_gatt_characteristic())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT characteristic.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT characteristic.", __FILE__, __func__, __LINE__);
+
+	if(!create_gatt_service())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT service.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT service.", __FILE__, __func__, __LINE__);
+
+	if(!create_gatt_server())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT server's handle.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT server's handle.", __FILE__, __func__, __LINE__);
+
+	if(!start_gatt_server())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register the application along with the GATT services of the application it is hosting.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering the application along with the GATT services of the application it is hosting.", __FILE__, __func__, __LINE__);
+
+	if(!create_bluetooth_le_advertiser())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create advertiser to advertise device's existence.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating advertiser to advertise device's existence.", __FILE__, __func__, __LINE__);
+
+	if(!start_bluetooth_le_advertising())
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
+
+//	if(!)
 //	{
-//		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_initialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to initialize the Bluetooth API.", __FILE__, __func__, __LINE__);
+//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to", __FILE__, __func__, __LINE__);
 //		return false;
 //	}
 //	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in initializing the Bluetooth API.", __FILE__, __func__, __LINE__);
-//
-//	retval = bt_gatt_server_initialize();
-//
-//	if(retval != BT_ERROR_NONE)
-//	{
-//		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_gatt_server_initialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to initialize the GATT server.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in initializing the GATT server.", __FILE__, __func__, __LINE__);
-//
-//	if (!create_server())
-//	{
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT server's handle.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT server's handle.", __FILE__, __func__, __LINE__);
-//
-//	if (!set_connection_state_changed_callback())
-//	{
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register a callback function that will be invoked when the connection state is changed.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering a callback function that will be invoked when the connection state is changed.", __FILE__, __func__, __LINE__);
-//
-//	if (!create_service())
-//	{
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT service.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT service.", __FILE__, __func__, __LINE__);
-//
-//	if (!create_characteristic())
-//	{
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to creates the GATT characteristic.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT characteristic.", __FILE__, __func__, __LINE__);
-//
-//	if (!create_descriptor())
-//	{
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create the GATT characteristic descriptor.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating the GATT characteristic descriptor.", __FILE__, __func__, __LINE__);
-//
-//	if (!add_descriptor_to_characteristic())
-//		{
-//			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a descriptor to a specified characteristic.", __FILE__, __func__, __LINE__);
-//			return false;
-//		}
-//		else
-//			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in adding a descriptor to a specified characteristic.", __FILE__, __func__, __LINE__);
-//
-//	if (!add_characteristic_to_service())
-//	{
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a characteristic to a specified service.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in adding a characteristic to a specified service.", __FILE__, __func__, __LINE__);
-//
-//	if (!register_service_to_server())
-//	{
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register a specified service to the specified GATT server that the local device is hosting.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering a specified service to the specified GATT server that the local device is hosting.", __FILE__, __func__, __LINE__);
-//
-//	retval = bt_gatt_server_start();
-//
-//	if(retval != BT_ERROR_NONE)
-//	{
-//		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_gatt_server_start() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to register the application along with the GATT services of the application it is hosting.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in registering the application along with the GATT services of the application it is hosting.", __FILE__, __func__, __LINE__);
-//
-//	if(!create_advertiser())
-//	{
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to create advertiser to advertise device's existence or respond to LE scanning request.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else {
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating advertiser to advertise device's existence or respond to LE scanning request.", __FILE__, __func__, __LINE__);
-//	}
-//
-//	if(!set_advertising_device_name())
-//		{
-//			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to set whether the device name should be included in advertise data.", __FILE__, __func__, __LINE__);
-//			return false;
-//		}
-//		else
-//			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in setting whether the device name should be included in advertise data.", __FILE__, __func__, __LINE__);
-//
-//	if(!set_advertising_service_uuid())
-//		{
-//			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to add a service UUID to advertise data.", __FILE__, __func__, __LINE__);
-//			return false;
-//		}
-//		else
-//			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in adding a service UUID to advertise data.", __FILE__, __func__, __LINE__);
-//
-//	if(!start_advertising())
-//	{
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
+//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in", __FILE__, __func__, __LINE__);
 
 	return true;
 }
@@ -268,17 +224,7 @@ static void
 app_terminate(void *data)
 {
 	/* Release all resources. */
-//	int retval;
-//
-//	retval = bt_deinitialize();
-//
-//	if(retval != BT_ERROR_NONE)
-//	{
-//		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_deinitialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all resources of the Bluetooth API.", __FILE__, __func__, __LINE__);
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all resources of the Bluetooth API.", __FILE__, __func__, __LINE__);
+	int retval;
 
 	if(check_hrm_sensor_listener_is_created())
 	{
@@ -287,6 +233,26 @@ app_terminate(void *data)
 		else
 			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all the resources allocated for a HRM sensor listener.", __FILE__, __func__, __LINE__);
 	}
+
+	if(!destroy_gatt_service())
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT handle of service.", __FILE__, __func__, __LINE__);
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying the GATT handle of service.", __FILE__, __func__, __LINE__);
+
+	if(!destroy_gatt_server())
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to destroy the GATT server's handle.", __FILE__, __func__, __LINE__);
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in destroying the GATT server's handle.", __FILE__, __func__, __LINE__);
+
+	retval = bt_deinitialize();
+
+	if(retval != BT_ERROR_NONE)
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_deinitialize() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to release all resources of the Bluetooth API.", __FILE__, __func__, __LINE__);
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in releasing all resources of the Bluetooth API.", __FILE__, __func__, __LINE__);
 }
 
 static void
@@ -424,10 +390,20 @@ bool check_and_request_sensor_permission() {
 					return false;
 				}
 				else
-				{
 					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating a HRM sensor listener.", __FILE__, __func__, __LINE__);
-					return true;
-				}
+
+//				if(!start_hrm_sensor_listener())
+//				{
+//					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
+//					return false;
+//				}
+//				else
+//				{
+//					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
+//					return true;
+//				}
+
+				return true;
 			}
 		case PRIVACY_PRIVILEGE_MANAGER_CHECK_RESULT_DENY:
 			/* Show a message and terminate the application */
@@ -505,6 +481,14 @@ void request_sensor_permission_response_callback(ppm_call_cause_e cause, ppm_req
 			}
 			else
 				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating a HRM sensor listener.", __FILE__, __func__, __LINE__);
+
+//			if(!start_hrm_sensor_listener())
+//			{
+//				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
+//				ui_app_exit();
+//			}
+//			else
+//				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
 			break;
 		case PRIVACY_PRIVILEGE_MANAGER_REQUEST_RESULT_DENY_FOREVER:
 			/* Show a message and terminate the application */
