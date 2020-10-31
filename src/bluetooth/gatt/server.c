@@ -57,25 +57,15 @@ bool set_gett_server_connection_state_changed_callback()
 
 void gatt_server_connection_state_changed_callback(int result, bool connected, const char *remote_address, void *user_data)
 {
-	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Function gatt_server_connection_state_changed_callback() is invoked.", __FILE__, __func__, __LINE__);
-	dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function gatt_server_connection_state_changed_callback() output connected = %d", __FILE__, __func__, __LINE__, connected);
-
 	if(!connected)
 	{
-//		if(!start_bluetooth_le_advertising())
-//			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
-//		else
-//			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
-//
-//		if(!stop_hrm_sensor_listener())
-//			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to stop observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
-//		else
-//			dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in stopping observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
-
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: A GATT server is disconnected.", __FILE__, __func__, __LINE__);
 		ui_app_exit();
 	}
 	else
 	{
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: A GATT server is connected.", __FILE__, __func__, __LINE__);
+
 		if(!stop_bluetooth_le_advertising())
 			dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to stop the advertising.", __FILE__, __func__, __LINE__);
 		else

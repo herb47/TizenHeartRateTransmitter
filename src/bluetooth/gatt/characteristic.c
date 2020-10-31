@@ -2,8 +2,6 @@
 #include "bluetooth/gatt/characteristic.h"
 #include "bluetooth/gatt/descriptor.h"
 
-const char *GATT_CHARACTERISTIC_UUID = "00002A37-0000-1000-8000-00805F9B34FB";
-
 bt_gatt_h gatt_characteristic_handle = 0;
 
 void gatt_characteristic_notification_sent_callback(int result, const char *remote_address, bt_gatt_server_h server, bt_gatt_h characteristic, bool completed, void *user_data);
@@ -11,6 +9,7 @@ void gatt_characteristic_notification_sent_callback(int result, const char *remo
 bool create_gatt_characteristic()
 {
 	int retval;
+	const char *GATT_CHARACTERISTIC_UUID = "00002A37-0000-1000-8000-00805F9B34FB";
 	const char CHARACTERISTIC_VALUE[] = {0, 0, 0, 0, 0};
 
 	retval = bt_gatt_characteristic_create(GATT_CHARACTERISTIC_UUID,
@@ -93,7 +92,10 @@ bool notify_gatt_characteristic_value_changed()
 
 void gatt_characteristic_notification_sent_callback(int result, const char *remote_address, bt_gatt_server_h server, bt_gatt_h characteristic, bool completed, void *user_data)
 {
-	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Function gatt_characteristic_notification_sent_callback() is invoked.", __FILE__, __func__, __LINE__);
+	if(!completed)
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to send a GATT characteristic value changed notification.", __FILE__, __func__, __LINE__);
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in sending a GATT characteristic value changed notification.", __FILE__, __func__, __LINE__);
 }
 
 bool get_gatt_characteristic_handle(bt_gatt_h *gatt_handle)

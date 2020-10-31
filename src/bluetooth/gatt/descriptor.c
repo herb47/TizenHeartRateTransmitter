@@ -1,14 +1,13 @@
 #include "heartratetransmitter.h"
 #include "bluetooth/gatt/descriptor.h"
 
-const char *GATT_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805F9B34FB";
-const char GATT_DESCRIPTOR_VALUE[] = {1, 0};
-
 bt_gatt_h gatt_descriptor_handle = 0;
 
 bool create_gatt_descriptor()
 {
 	int retval;
+	const char *GATT_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805F9B34FB";
+	const char GATT_DESCRIPTOR_VALUE[] = {1, 0};
 
 	retval = bt_gatt_descriptor_create(GATT_DESCRIPTOR_UUID,
 			BT_GATT_PERMISSION_READ|BT_GATT_PERMISSION_WRITE,

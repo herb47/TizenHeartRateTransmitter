@@ -3,7 +3,6 @@
 #include "bluetooth/gatt/characteristic.h"
 
 const char *GATT_SERVICE_UUID = "0000180D-0000-1000-8000-00805F9B34FB";
-
 bt_gatt_h gatt_service_handle = 0;
 
 bool create_gatt_service()

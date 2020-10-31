@@ -9,8 +9,6 @@
 
 #include "sensor/listener.h"
 
-const char *sensor_privilege = "http://tizen.org/privilege/healthinfo";
-
 typedef struct appdata {
 	Evas_Object *win;
 	Evas_Object *conform;
@@ -22,6 +20,8 @@ sensor_h sensor_handle = 0;
 
 bool check_hrm_sensor_is_supported();
 bool initialize_hrm_sensor();
+
+const char *sensor_privilege = "http://tizen.org/privilege/healthinfo";
 
 bool check_and_request_sensor_permission();
 bool request_sensor_permission();
@@ -184,14 +184,6 @@ app_create(void *data)
 	else
 		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting advertising with passed advertiser and advertising parameters.", __FILE__, __func__, __LINE__);
 
-//	if(!)
-//	{
-//		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to", __FILE__, __func__, __LINE__);
-//		return false;
-//	}
-//	else
-//		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in", __FILE__, __func__, __LINE__);
-
 	return true;
 }
 
@@ -205,6 +197,8 @@ static void
 app_pause(void *data)
 {
 	/* Take necessary actions when application becomes invisible. */
+	//dlog_print(DLOG_WARN, LOG_TAG, "%s/%s/%d: in app_pause... i want to sleep... 30sec..", __FILE__, __func__, __LINE__);
+	//sleep(30);
 }
 
 static void
@@ -379,7 +373,7 @@ bool check_and_request_sensor_permission() {
 				if(!initialize_hrm_sensor())
 				{
 					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to get the handle for the default sensor of a HRM sensor.", __FILE__, __func__, __LINE__);
-					ui_app_exit();
+					return false;
 				}
 				else
 					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in getting the handle for the default sensor of a HRM sensor.", __FILE__, __func__, __LINE__);
@@ -391,20 +385,8 @@ bool check_and_request_sensor_permission() {
 				}
 				else
 					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating a HRM sensor listener.", __FILE__, __func__, __LINE__);
-
-//				if(!start_hrm_sensor_listener())
-//				{
-//					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
-//					return false;
-//				}
-//				else
-//				{
-//					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
-//					return true;
-//				}
-
-				return true;
 			}
+			return true;
 		case PRIVACY_PRIVILEGE_MANAGER_CHECK_RESULT_DENY:
 			/* Show a message and terminate the application */
 			dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function ppm_check_permission() output result = PRIVACY_PRIVILEGE_MANAGER_CHECK_RESULT_DENY", __FILE__, __func__, __LINE__);
@@ -442,6 +424,8 @@ bool request_sensor_permission()
 
 	/* Log and handle errors */
 	if (retval == PRIVACY_PRIVILEGE_MANAGER_ERROR_NONE)
+		return true;
+	else if (retval == PRIVACY_PRIVILEGE_MANAGER_ERROR_ALREADY_IN_PROGRESS)
 		return true;
 	else
 	{
@@ -481,14 +465,6 @@ void request_sensor_permission_response_callback(ppm_call_cause_e cause, ppm_req
 			}
 			else
 				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating a HRM sensor listener.", __FILE__, __func__, __LINE__);
-
-//			if(!start_hrm_sensor_listener())
-//			{
-//				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
-//				ui_app_exit();
-//			}
-//			else
-//				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
 			break;
 		case PRIVACY_PRIVILEGE_MANAGER_REQUEST_RESULT_DENY_FOREVER:
 			/* Show a message and terminate the application */

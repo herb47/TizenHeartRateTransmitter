@@ -78,8 +78,6 @@ bool start_bluetooth_le_advertising()
 
 void bluetooth_le_advertising_state_changed_callback(int result, bt_advertiser_h advertiser, bt_adapter_le_advertising_state_e adv_state, void *user_data)
 {
-	dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Function connection_state_changed_callback() is invoked.", __FILE__, __func__, __LINE__);
-
 	switch(adv_state)
 	{
 		case BT_ADAPTER_LE_ADVERTISING_STARTED:
