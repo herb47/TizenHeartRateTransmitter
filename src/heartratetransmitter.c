@@ -94,6 +94,7 @@ app_create(void *data)
 		If this function returns true, the main loop of application starts
 		If this function returns false, the application is terminated */
 	int retval;
+	bt_adapter_state_e bluetooth_adapter_state;
 	appdata_s *ad = data;
 
 	create_base_gui(ad);
@@ -116,6 +117,25 @@ app_create(void *data)
 	}
 	else
 		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in initializing the Bluetooth API.", __FILE__, __func__, __LINE__);
+
+	retval = bt_adapter_get_state(&bluetooth_adapter_state);
+
+	if(retval != BT_ERROR_NONE)
+	{
+		dlog_print(DLOG_DEBUG, LOG_TAG, "%s/%s/%d: Function bt_adapter_get_state() return value = %s", __FILE__, __func__, __LINE__, get_error_message(retval));
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to get the current state of local Bluetooth adapter.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in getting the current state of local Bluetooth adapter.", __FILE__, __func__, __LINE__);
+
+	if (bluetooth_adapter_state == BT_ADAPTER_DISABLED)
+	{
+		dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Bluetooth adapter is disabled.", __FILE__, __func__, __LINE__);
+		return false;
+	}
+	else
+		dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Bluetooth adapter is enabled.", __FILE__, __func__, __LINE__);
 
 	retval = bt_gatt_server_initialize();
 
@@ -197,8 +217,6 @@ static void
 app_pause(void *data)
 {
 	/* Take necessary actions when application becomes invisible. */
-	//dlog_print(DLOG_WARN, LOG_TAG, "%s/%s/%d: in app_pause... i want to sleep... 30sec..", __FILE__, __func__, __LINE__);
-	//sleep(30);
 }
 
 static void
