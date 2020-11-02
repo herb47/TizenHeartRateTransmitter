@@ -3,7 +3,7 @@
 #include "bluetooth/gatt/characteristic.h"
 
 sensor_listener_h hrm_sensor_listener_handle = 0;
-unsigned int hrm_sensor_listener_event_update_interval_ms = 5000;
+unsigned int hrm_sensor_listener_event_update_interval_ms = 3000;
 
 static void hrm_sensor_listener_event_callback(sensor_h sensor, sensor_event_s events[], void *user_data);
 
