@@ -403,6 +403,11 @@ bool check_and_request_sensor_permission() {
 				}
 				else
 					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating a HRM sensor listener.", __FILE__, __func__, __LINE__);
+
+				if(!start_hrm_sensor_listener())
+					dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
+				else
+					dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
 			}
 			return true;
 		case PRIVACY_PRIVILEGE_MANAGER_CHECK_RESULT_DENY:
@@ -483,6 +488,14 @@ void request_sensor_permission_response_callback(ppm_call_cause_e cause, ppm_req
 			}
 			else
 				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in creating a HRM sensor listener.", __FILE__, __func__, __LINE__);
+
+			if(!start_hrm_sensor_listener())
+			{
+				dlog_print(DLOG_ERROR, LOG_TAG, "%s/%s/%d: Failed to start observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
+				ui_app_exit();
+			}
+			else
+				dlog_print(DLOG_INFO, LOG_TAG, "%s/%s/%d: Succeeded in starting observing the sensor events regarding a HRM sensor listener.", __FILE__, __func__, __LINE__);
 			break;
 		case PRIVACY_PRIVILEGE_MANAGER_REQUEST_RESULT_DENY_FOREVER:
 			/* Show a message and terminate the application */
